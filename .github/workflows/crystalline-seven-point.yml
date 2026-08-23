@@ -135,6 +135,93 @@ jobs:
             upstream/grid1000-unresolved.json
           if-no-files-found: ignore
 
+  grid250-shard:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: fast
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install collector-enabled crystalline verifier
+        run: |
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/grid250_shard.py upstream/grid250_shard.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Exhaust one disjoint grid-250 shard
+        run: |
+          set -o pipefail
+          cd upstream
+          python grid250_shard.py --shard "${{ matrix.shard }}" --shard-count 8 2>&1 | tee "grid250-shard-${{ matrix.shard }}.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grid250-shard-${{ matrix.shard }}
+          path: |
+            upstream/grid250-shard-${{ matrix.shard }}.txt
+            upstream/grid250-shard-${{ matrix.shard }}.json
+          if-no-files-found: error
+
+  grid250-sharded-merge:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: grid250-shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install collector-enabled crystalline verifier
+        run: |
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/grid250_collect_and_refine.py upstream/grid250_collect_and_refine.py
+          cp verifier/grid250_merge_and_refine.py upstream/grid250_merge_and_refine.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Download all grid-250 shard certificates
+        uses: actions/download-artifact@v4
+        with:
+          pattern: grid250-shard-*
+          path: upstream/shards
+          merge-multiple: true
+      - name: Merge shard misses and refine them rigorously
+        run: |
+          set -o pipefail
+          cd upstream
+          python grid250_merge_and_refine.py --shards-dir shards --shard-count 8 2>&1 | tee grid250-sharded-merge.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grid250-sharded-merge
+          path: |
+            upstream/grid250-sharded-merge.txt
+            upstream/grid250-sharded-summary.json
+            upstream/grid500-sharded-unresolved.json
+            upstream/grid1000-sharded-unresolved.json
+          if-no-files-found: ignore
+
   interval:
     if: github.event_name == 'workflow_dispatch' && inputs.run_interval
     needs: fast
