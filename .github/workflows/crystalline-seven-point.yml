@@ -81,8 +81,9 @@ jobs:
         run: python -m pip install -e upstream
       - name: Run full interval certificate
         run: |
+          set -o pipefail
           cd upstream
-          python crystal_verify.py main --grid 4000 --workers "${{ inputs.workers }}" | tee crystalline-seven-grid4000.txt
+          python crystal_verify.py main --grid 4000 --workers "${{ inputs.workers }}" 2>&1 | tee crystalline-seven-grid4000.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
