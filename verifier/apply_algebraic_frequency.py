@@ -56,6 +56,31 @@ def patch_parallel(path: Path) -> None:
     path.write_text(text)
 
 
+def patch_verify_general(path: Path) -> None:
+    """Allow the canonical verifier to start from explicitly supplied boxes."""
+    text = path.read_text()
+
+    old_signature = '''def verify_general(\n    spec: CertificateSpec,\n    progress_every: int = 0,\n    shard: int = 0,\n    shard_count: int = 1,\n    tables: Optional[Tuple[List[float], List[float]]] = None,\n) -> GeneralReport:\n'''
+    new_signature = '''def verify_general(\n    spec: CertificateSpec,\n    progress_every: int = 0,\n    shard: int = 0,\n    shard_count: int = 1,\n    tables: Optional[Tuple[List[float], List[float]]] = None,\n    initial_boxes: Optional[Sequence[Tuple[CellRange, ...]]] = None,\n) -> GeneralReport:\n'''
+    text = replace_once(
+        text, old_signature, new_signature, "verify_general initial-box signature"
+    )
+
+    old_stack = '''    stack: List[Tuple[Tuple[CellRange, ...], int]] = [\n        (tuple(parts), 0)\n        for index, parts in enumerate(itertools.product(*coordinate_components))\n        if index % shard_count == shard\n    ]\n    initial_boxes = len(stack)\n'''
+    new_stack = '''    if initial_boxes is None:\n        stack: List[Tuple[Tuple[CellRange, ...], int]] = [\n            (tuple(parts), 0)\n            for index, parts in enumerate(itertools.product(*coordinate_components))\n            if index % shard_count == shard\n        ]\n    else:\n        checked_boxes: List[Tuple[CellRange, ...]] = []\n        for supplied in initial_boxes:\n            if len(supplied) != q:\n                raise ValueError("initial box dimension mismatch")\n            normalized = tuple((int(left), int(right)) for left, right in supplied)\n            for left, right in normalized:\n                if left < 0 or right < left:\n                    raise ValueError("invalid initial cell range")\n            checked_boxes.append(normalized)\n        stack = [\n            (box, 0)\n            for index, box in enumerate(checked_boxes)\n            if index % shard_count == shard\n        ]\n    initial_box_count = len(stack)\n'''
+    text = replace_once(
+        text, old_stack, new_stack, "verify_general initial-box stack"
+    )
+
+    text = replace_once(
+        text,
+        '        initial_boxes=initial_boxes,\n',
+        '        initial_boxes=initial_box_count,\n',
+        "verify_general report initial-box count",
+    )
+    path.write_text(text)
+
+
 def main() -> None:
     root = Path(__file__).resolve().parent.parent / "upstream"
     if not root.exists():
@@ -63,7 +88,8 @@ def main() -> None:
     patch_kernel(root / "src/zeta_ext/kernel.py")
     patch_h0(root / "src/zeta_ext/h0_cert.py")
     patch_parallel(root / "src/zeta_ext/parallel.py")
-    print("algebraic-frequency extension applied")
+    patch_verify_general(root / "src/zeta_ext/verify_general.py")
+    print("algebraic-frequency and targeted-box extensions applied")
 
 
 if __name__ == "__main__":
