@@ -24,11 +24,11 @@ Crystalline scale:
 
 `alpha = 8796791 / 1000000 = 8.796791`.
 
-Frequencies are
+Frequencies:
 
 `sqrt(2), alpha, alpha*sqrt(3), 2*alpha, alpha*sqrt(7), 3*alpha, 2*alpha*sqrt(3)`.
 
-The six crystalline shell radicands are `(1, 3, 4, 7, 9, 12)`.
+Crystalline shell radicands: `(1, 3, 4, 7, 9, 12)`.
 
 Window coefficient numerators, denominator `10^9`:
 
@@ -102,34 +102,59 @@ At that point the numerical Hessian eigenvalues are approximately
 
 All are positive; the basin is isolated rather than nearly flat. The gradient infinity norm was approximately `1.63e-9`, with Hessian condition number about `8.28`.
 
-The grid-250 terminal-cell scale is `0.004`. A midpoint tangent estimate for the cell containing the known minimum was approximately `0.00598137`, still about `1.37e-6` above the target. This is encouraging but is not itself the global proof.
+## Grid-250 global interval attempt — UNRESOLVED, NOT A COUNTEREXAMPLE
 
-## Interval campaign
+The single-worker grid-250 verifier run `32622361840`, job `97152392234`, reached a terminal cell that its interval bounds could not certify:
 
-A staged fail-closed campaign was chosen instead of starting at grid 4000:
+```text
+box=((494,494),(263,263),(499,499),(499,499),(263,263),(494,494))
+lower=0.005841208384501174
+```
 
-`250 -> 500 -> 1000 -> 2000 -> 4000`, stopping as soon as a rigorous run succeeds.
+This corresponds to
 
-As of approximately 2026-08-23 02:25 EDT:
+```text
+g1 in [1.976,1.980]
+g2 in [1.052,1.056]
+g3 in [1.996,2.000]
+g4 in [1.996,2.000]
+g5 in [1.052,1.056]
+g6 in [1.976,1.980]
+```
 
-- PR #1 branch: `ci/crystal-fast-gate`;
-- active workflow run: `32622511225`;
-- fast job `97152737359`: **success**;
-- coarse interval job `97152765163`: **in progress**;
-- configuration: grid `250`, `8` workers, tangent pruning enabled;
-- the older single-worker grid-250 run `32622361840` was also still in progress when last checked.
+The exact raw result and artifact identifiers are preserved in `verifier/GRID250_RESULT.md`.
 
-No mathematical counterexample or terminal-cell failure had appeared at the checkpoint time.
+Numerical diagnostics inside this exact cell do **not** indicate a target violation:
+
+- midpoint `(1.978,1.054,1.998,1.998,1.054,1.978)` gives `F ~= 0.006011802310648076...`;
+- bounded floating search in the cell found `F ~= 0.005992617682563697` near its lower corner;
+- this is still approximately `1.26177e-5` above the target.
+
+Therefore the current interpretation is interval over-enclosure at grid 250, not a numerical counterexample. The next natural global resolution is grid 500, or targeted refinement of this symmetric `2,1,2,2,1,2` cell.
+
+## CI reporting bug found and fixed
+
+The first grid-250 GitHub job badge was misleadingly shown as `success` because the command was piped through `tee` without shell `pipefail`; Python raised a `RuntimeError`, but the shell returned the exit code of `tee`.
+
+The workflow on both `main` and `ci/crystal-fast-gate` has now been corrected to use `set -o pipefail` for interval commands. Pre-fix interval job badges must not be treated as proof results without reading their logs.
 
 ## Multiprocessing correctness fix
 
-While preparing the interval campaign, a real infrastructure bug was found: the upstream parallel verifier serialized `KernelSpec` but originally omitted the new `algebraic_omegas` field. Any multi-worker crystalline run would therefore have lost the crystalline frequencies during worker reconstruction.
+While preparing the interval campaign, a separate infrastructure bug was found: the upstream parallel verifier serialized `KernelSpec` but originally omitted the new `algebraic_omegas` field. Any multi-worker crystalline run would therefore have lost the crystalline frequencies during worker reconstruction.
 
 `verifier/apply_algebraic_frequency.py` now also patches `parallel.py` so `algebraic_omegas` is serialized/deserialized exactly as `(numerator, denominator, radicand)` triples.
 
-`verifier/test_crystal_design.py` now contains a regression test verifying that the parallel primitive round-trip preserves `crystal_design.KERNEL` and its algebraic frequencies.
+`verifier/test_crystal_design.py` contains a regression test verifying that the parallel primitive round-trip preserves `crystal_design.KERNEL` and its algebraic frequencies. The fast CI gate passed after this fix.
 
-The fast CI gate passed after this fix.
+## Interval campaign
+
+Resolution ladder remains
+
+`250 -> 500 -> 1000 -> 2000 -> 4000`.
+
+Grid 250 is now classified as **insufficiently sharp** because of the unresolved terminal cell above. Do not interpret it as a falsification of the candidate.
+
+An eight-worker grid-250 run `32622511225` / job `97152765163` had also been started after the multiprocessing fix. Its workflow version predates the `pipefail` correction, so its final GitHub badge alone is not authoritative; inspect its verifier log before using it.
 
 ## Earlier branches and dead ends
 
@@ -153,13 +178,22 @@ reproduces the known pure-pair-energy frontier obstruction. Its periodic pair en
 
 The coarse defect interpretation gives 327 paired units, 19 phase defects, cells of lengths 35/37 with fifteen 35-cells and four 37-cells, and long-cell spacings `5,5,5,4` up to rotation. Continued fraction: `673/1000 = [0;1,2,17,4,1,3]`.
 
+## Repository cleanup at checkpoint
+
+- obsolete malformed `verifier/algebraic_frequency.patch` removed;
+- source-shape-checked `verifier/apply_algebraic_frequency.py` is the supported extension mechanism;
+- root README updated to the current q=6 candidate hierarchy;
+- roadmap updated to the current global interval stage;
+- grid-250 failure details preserved in `verifier/GRID250_RESULT.md`.
+
 ## Resume procedure
 
-1. Check workflow run `32622511225` / job `97152765163` and the older single-worker grid-250 run.
-2. If grid 250 verifies globally, record the report and table hashes, then harden with a finer run and/or `use_tangent=False` re-verification where computationally feasible.
-3. If grid 250 fails at terminal cells, capture those cells rather than treating the failure as a counterexample; inspect the true objective there and move to grid 500 or targeted subdivision.
-4. Do not raise the target above `0.00598` until the conservative target is globally certified.
-5. Only after certification consider the numerical stretch target `0.005984`, which would project to approximately `0.6733391070` but currently has only about `5.55e-6` floating margin to the observed minimum.
+1. Inspect the final raw log of the eight-worker grid-250 run if useful; ignore its badge unless the verifier output itself says `verified=True`.
+2. Run the conservative target at grid 500 with corrected `pipefail` and the validated multiprocessing serialization.
+3. If grid 500 still leaves terminal cells, collect them and refine them directly or proceed to grid 1000.
+4. Preserve exact failed cells, lower bounds, table hashes, node counts, and artifacts from every rigorous run.
+5. Do not raise the target above `0.00598` until the conservative target is globally certified.
+6. Only after certification consider the numerical stretch target `0.005984`, which would project to approximately `0.6733391070` but currently has only about `5.55e-6` floating margin to the observed minimum.
 
 ## Claims policy
 
