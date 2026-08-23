@@ -1,0 +1,87 @@
+name: crystalline-seven-point-certificate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "verifier/**"
+      - ".github/workflows/crystalline-seven-point.yml"
+  workflow_dispatch:
+    inputs:
+      run_interval:
+        description: "Run the full six-gap interval certificate"
+        required: false
+        default: false
+        type: boolean
+      workers:
+        description: "Parallel verifier workers"
+        required: false
+        default: "4"
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install candidate into upstream verifier
+        run: |
+          cd upstream
+          git apply ../verifier/algebraic_frequency.patch
+          cp ../verifier/crystal_design.py src/zeta_ext/crystal_design.py
+          cp ../verifier/test_crystal_design.py tests/test_crystal_design.py
+          cp ../verifier/crystal_verify.py crystal_verify.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Run upstream and crystalline tests
+        run: |
+          cd upstream
+          python -m unittest -v tests/test_zeta_ext.py tests/test_crystal_design.py
+      - name: Run rigorous fast analytic gates
+        run: |
+          cd upstream
+          python crystal_verify.py fast
+
+  interval:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_interval
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install candidate into upstream verifier
+        run: |
+          cd upstream
+          git apply ../verifier/algebraic_frequency.patch
+          cp ../verifier/crystal_design.py src/zeta_ext/crystal_design.py
+          cp ../verifier/test_crystal_design.py tests/test_crystal_design.py
+          cp ../verifier/crystal_verify.py crystal_verify.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Run full interval certificate
+        run: |
+          cd upstream
+          python crystal_verify.py main --grid 4000 --workers "${{ inputs.workers }}" | tee crystalline-seven-grid4000.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: crystalline-seven-grid4000
+          path: upstream/crystalline-seven-grid4000.txt
