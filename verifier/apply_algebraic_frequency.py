@@ -43,12 +43,26 @@ def patch_h0(path: Path) -> None:
     path.write_text(text)
 
 
+def patch_parallel(path: Path) -> None:
+    """Keep algebraic frequencies intact when CertificateSpec crosses processes."""
+    text = path.read_text()
+    old_encode = '''        "omega_pi_multiples": list(spec.kernel.omega_pi_multiples),\n        "has_sqrt2_term": spec.kernel.has_sqrt2_term,\n        "q": spec.q,\n'''
+    new_encode = '''        "omega_pi_multiples": list(spec.kernel.omega_pi_multiples),\n        "has_sqrt2_term": spec.kernel.has_sqrt2_term,\n        "algebraic_omegas": [\n            ((int(scale.p), int(scale.q)), int(radicand))\n            for scale, radicand in spec.kernel.algebraic_omegas\n        ],\n        "q": spec.q,\n'''
+    text = replace_once(text, old_encode, new_encode, "parallel kernel encoding")
+
+    old_decode = '''        omega_pi_multiples=tuple(data["omega_pi_multiples"]),\n        has_sqrt2_term=data["has_sqrt2_term"],\n    )\n'''
+    new_decode = '''        omega_pi_multiples=tuple(data["omega_pi_multiples"]),\n        has_sqrt2_term=data["has_sqrt2_term"],\n        algebraic_omegas=tuple(\n            (fmpq(p, q), int(radicand))\n            for (p, q), radicand in data.get("algebraic_omegas", [])\n        ),\n    )\n'''
+    text = replace_once(text, old_decode, new_decode, "parallel kernel decoding")
+    path.write_text(text)
+
+
 def main() -> None:
     root = Path(__file__).resolve().parent.parent / "upstream"
     if not root.exists():
         root = Path.cwd()
     patch_kernel(root / "src/zeta_ext/kernel.py")
     patch_h0(root / "src/zeta_ext/h0_cert.py")
+    patch_parallel(root / "src/zeta_ext/parallel.py")
     print("algebraic-frequency extension applied")
 
 
