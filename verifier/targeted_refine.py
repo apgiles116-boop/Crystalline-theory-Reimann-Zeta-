@@ -1,6 +1,6 @@
 """Rigorous local refinement of the unresolved grid-250 crystalline cell.
 
-This script does not replace the global certificate.  It asks the canonical
+This script does not replace the global certificate. It asks the canonical
 interval verifier to check only the exact children of the one grid-250 cell
 that remained unresolved in the first global run.
 """
@@ -28,10 +28,24 @@ def focused_boxes(grid: int):
         range(index * ratio, (index + 1) * ratio)
         for index in PARENT_INDICES
     ]
-    return [
+    boxes = [
         tuple((index, index) for index in child)
         for child in itertools.product(*coordinate_children)
     ]
+
+    # Integer-exact coverage checks. Each child grid cell [j/grid,(j+1)/grid]
+    # must tile its parent [i/250,(i+1)/250] in every coordinate, and the
+    # Cartesian product must therefore contain exactly ratio**6 boxes.
+    if len(boxes) != ratio ** len(PARENT_INDICES):
+        raise RuntimeError("focused-box count does not match exact tiling")
+    for parent, children in zip(PARENT_INDICES, coordinate_children):
+        if children.start != parent * ratio:
+            raise RuntimeError("focused-box left endpoint mismatch")
+        if children.stop != (parent + 1) * ratio:
+            raise RuntimeError("focused-box right endpoint mismatch")
+        if len(children) != ratio:
+            raise RuntimeError("focused-box coordinate count mismatch")
+    return boxes
 
 
 def main(grid: int, no_tangent: bool) -> int:
