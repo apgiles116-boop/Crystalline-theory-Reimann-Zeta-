@@ -7,6 +7,7 @@ from zeta_ext.h0_cert import (
     window_functional, window_min_enclosure, window_monotone_factor_upper,
 )
 from zeta_ext.kernel import kernel_omegas
+from zeta_ext.parallel import _spec_from_primitives, _spec_to_primitives
 
 class CrystalTests(unittest.TestCase):
     def test_exact_frequencies(self):
@@ -20,6 +21,15 @@ class CrystalTests(unittest.TestCase):
         self.assertEqual(len(got), len(expected))
         for x, y in zip(got, expected):
             self.assertTrue(x.overlaps(y))
+
+    def test_parallel_round_trip_preserves_algebraic_frequencies(self):
+        spec = crystal_design.certificate_spec(grid=250)
+        rebuilt = _spec_from_primitives(_spec_to_primitives(spec))
+        self.assertEqual(rebuilt.kernel.algebraic_omegas, spec.kernel.algebraic_omegas)
+        self.assertEqual(rebuilt.kernel.coeffs, spec.kernel.coeffs)
+        self.assertEqual(rebuilt.weights, spec.weights)
+        self.assertEqual(rebuilt.pressure, spec.pressure)
+        self.assertEqual(rebuilt.target, spec.target)
 
     def test_span_capacities(self):
         for r in range(1, 7):
