@@ -90,14 +90,47 @@ This is an unresolved terminal cell, not a counterexample. Numerical diagnostics
 
 Full details: `verifier/GRID250_RESULT.md`.
 
-**Next step:** grid 500 and/or targeted subdivision of the symmetric `2,1,2,2,1,2` cell.
+### Targeted grid-500 refinement — PASSED
+
+The exact grid-250 parent cell above was subdivided into its `2^6 = 64` grid-500 children and checked with the same canonical rigorous verifier using explicit initial boxes.
+
+GitHub Actions run `32660182889`, targeted job `97245058938`, returned:
+
+```text
+verified=True
+target=F >= 299/50000
+grid=500
+nodes=64
+pruned=64
+splits=0
+initial_boxes=64
+interval_pruned=0
+pressure_pruned=0
+tangent_pruned=64
+```
+
+All 64 children were rigorously closed by the Arb-validated convex-tangent/Hessian pruner. No child remained unresolved.
+
+This establishes that the first grid-250 failure was a local resolution / interval-over-enclosure issue, not a violation inside that parent cell.
+
+It does **not** yet establish the global inequality, because the original grid-250 run terminated at the first unresolved terminal cell and therefore did not prove that no later grid-250 cells would also require refinement.
+
+Full details: `verifier/GRID500_TARGETED_RESULT.md`.
+
+**Next step:** complete the global search. Two rigorous routes are now available:
+
+1. run the global certificate at grid 500; or
+2. add a fail-closed diagnostic mode that collects every unresolved grid-250 terminal cell, then certify only those cells at grid 500 or finer resolution.
+
+The second route may be substantially cheaper if unresolved cells are sparse.
 
 ### CI hardening
 
-Two infrastructure issues were found and corrected:
+Three infrastructure improvements are now in place:
 
-- multi-worker serialization now preserves `algebraic_omegas` exactly, with a regression test;
-- interval commands piped through `tee` now use `set -o pipefail`, so a verifier exception correctly fails the GitHub job.
+- multi-worker serialization preserves `algebraic_omegas` exactly, with a regression test;
+- interval commands piped through `tee` use `set -o pipefail`, so a verifier exception correctly fails the GitHub job;
+- the canonical verifier can optionally begin from explicitly supplied boxes, allowing rigorous targeted refinement without maintaining a second proof engine.
 
 Pre-fix green interval badges are not proof results unless the raw verifier output itself says verification succeeded.
 
