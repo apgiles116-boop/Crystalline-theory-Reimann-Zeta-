@@ -40,11 +40,10 @@ jobs:
           python-version: "3.13"
       - name: Install candidate into upstream verifier
         run: |
-          cd upstream
-          git apply ../verifier/algebraic_frequency.patch
-          cp ../verifier/crystal_design.py src/zeta_ext/crystal_design.py
-          cp ../verifier/test_crystal_design.py tests/test_crystal_design.py
-          cp ../verifier/crystal_verify.py crystal_verify.py
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/test_crystal_design.py upstream/tests/test_crystal_design.py
+          cp verifier/crystal_verify.py upstream/crystal_verify.py
       - name: Install pinned verifier dependencies
         run: python -m pip install -e upstream
       - name: Run upstream and crystalline tests
@@ -74,11 +73,10 @@ jobs:
           python-version: "3.13"
       - name: Install candidate into upstream verifier
         run: |
-          cd upstream
-          git apply ../verifier/algebraic_frequency.patch
-          cp ../verifier/crystal_design.py src/zeta_ext/crystal_design.py
-          cp ../verifier/test_crystal_design.py tests/test_crystal_design.py
-          cp ../verifier/crystal_verify.py crystal_verify.py
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/test_crystal_design.py upstream/tests/test_crystal_design.py
+          cp verifier/crystal_verify.py upstream/crystal_verify.py
       - name: Install pinned verifier dependencies
         run: python -m pip install -e upstream
       - name: Run full interval certificate
