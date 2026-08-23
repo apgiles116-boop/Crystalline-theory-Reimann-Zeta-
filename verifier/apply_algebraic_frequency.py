@@ -57,13 +57,13 @@ def patch_parallel(path: Path) -> None:
 
 
 def patch_verify_general(path: Path) -> None:
-    """Allow the canonical verifier to start from explicitly supplied boxes."""
+    """Add focused-box starts and fail-closed terminal-cell collection."""
     text = path.read_text()
 
     old_signature = '''def verify_general(\n    spec: CertificateSpec,\n    progress_every: int = 0,\n    shard: int = 0,\n    shard_count: int = 1,\n    tables: Optional[Tuple[List[float], List[float]]] = None,\n) -> GeneralReport:\n'''
-    new_signature = '''def verify_general(\n    spec: CertificateSpec,\n    progress_every: int = 0,\n    shard: int = 0,\n    shard_count: int = 1,\n    tables: Optional[Tuple[List[float], List[float]]] = None,\n    initial_boxes: Optional[Sequence[Tuple[CellRange, ...]]] = None,\n) -> GeneralReport:\n'''
+    new_signature = '''def verify_general(\n    spec: CertificateSpec,\n    progress_every: int = 0,\n    shard: int = 0,\n    shard_count: int = 1,\n    tables: Optional[Tuple[List[float], List[float]]] = None,\n    initial_boxes: Optional[Sequence[Tuple[CellRange, ...]]] = None,\n    collect_unresolved: bool = False,\n    unresolved_out: Optional[List[Tuple[Tuple[CellRange, ...], float]]] = None,\n) -> GeneralReport:\n'''
     text = replace_once(
-        text, old_signature, new_signature, "verify_general initial-box signature"
+        text, old_signature, new_signature, "verify_general extended signature"
     )
 
     old_stack = '''    stack: List[Tuple[Tuple[CellRange, ...], int]] = [\n        (tuple(parts), 0)\n        for index, parts in enumerate(itertools.product(*coordinate_components))\n        if index % shard_count == shard\n    ]\n    initial_boxes = len(stack)\n'''
@@ -74,9 +74,34 @@ def patch_verify_general(path: Path) -> None:
 
     text = replace_once(
         text,
+        '    nodes = pruned = splits = maximum_depth = 0\n',
+        '    nodes = pruned = splits = maximum_depth = 0\n    unresolved_count = 0\n',
+        "verify_general unresolved counter",
+    )
+
+    old_terminal = '''        if max(widths) == 0:\n            raise RuntimeError(\n                f"certificate failed at a terminal cell: box={box}, lower={lower}"\n            )\n'''
+    new_terminal = '''        if max(widths) == 0:\n            if collect_unresolved:\n                unresolved_count += 1\n                if unresolved_out is not None:\n                    unresolved_out.append((tuple(box), lower))\n                continue\n            raise RuntimeError(\n                f"certificate failed at a terminal cell: box={box}, lower={lower}"\n            )\n'''
+    text = replace_once(
+        text, old_terminal, new_terminal, "verify_general terminal collector"
+    )
+
+    text = replace_once(
+        text,
+        '        verified=True,\n',
+        '        verified=(unresolved_count == 0),\n',
+        "verify_general verified flag",
+    )
+    text = replace_once(
+        text,
         '        initial_boxes=initial_boxes,\n',
         '        initial_boxes=initial_box_count,\n',
         "verify_general report initial-box count",
+    )
+    text = replace_once(
+        text,
+        '            "pressure_pruned": pressure_pruned,\n',
+        '            "pressure_pruned": pressure_pruned,\n            "unresolved_count": unresolved_count,\n',
+        "verify_general unresolved report",
     )
     path.write_text(text)
 
@@ -89,7 +114,7 @@ def main() -> None:
     patch_h0(root / "src/zeta_ext/h0_cert.py")
     patch_parallel(root / "src/zeta_ext/parallel.py")
     patch_verify_general(root / "src/zeta_ext/verify_general.py")
-    print("algebraic-frequency and targeted-box extensions applied")
+    print("algebraic-frequency, targeted-box, and collector extensions applied")
 
 
 if __name__ == "__main__":
