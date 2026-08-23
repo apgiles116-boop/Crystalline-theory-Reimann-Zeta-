@@ -6,6 +6,11 @@ on:
     paths:
       - "verifier/**"
       - ".github/workflows/crystalline-seven-point.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "verifier/**"
+      - ".github/workflows/crystalline-seven-point.yml"
   workflow_dispatch:
     inputs:
       run_interval:
