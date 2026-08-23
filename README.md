@@ -23,7 +23,13 @@ Current leading candidate:
 
   for every nonnegative six-gap vector.
 
-The pressure term alone covers `sum(g_i) >= 11.8404`, so the remaining global proof is a compact six-dimensional interval problem. A staged fail-closed interval campaign is in progress.
+The pressure term alone covers `sum(g_i) >= 11.8404`, so the remaining global proof is a compact six-dimensional interval problem.
+
+The first fail-closed grid-250 attempt was **insufficiently sharp**, not falsifying: it stopped at the symmetric terminal cell
+
+`((494,494),(263,263),(499,499),(499,499),(263,263),(494,494))`
+
+with rigorous interval lower bound `0.005841208384501174 < 0.00598`. Numerical evaluation inside that exact cell still remains above target; see `verifier/GRID250_RESULT.md`. Grid 500 / targeted refinement is therefore the next certification step.
 
 See `docs/CHECKPOINT_2026-08-23.md` for the complete handoff state, exact CI run IDs, numerical minimizer, Hessian data, interval strategy, and resume procedure.
 
@@ -76,11 +82,13 @@ This is evidence only; the outward-rounded global interval proof remains load-be
 
 The verifier uses pressure pruning, rigorous lower tables for the pair kernel, and an Arb-validated convex-tangent/Hessian pruner. It is fail-closed: unresolved terminal cells cause failure rather than false certification.
 
-Planned resolution ladder:
+Resolution ladder:
 
 `250 -> 500 -> 1000 -> 2000 -> 4000`.
 
-The repository also contains a multiprocessing correctness fix: the crystalline `algebraic_omegas` field is now preserved through worker serialization/deserialization, with a regression test.
+Grid 250 has now produced one unresolved cell and is recorded in `verifier/GRID250_RESULT.md`. The CI workflow has also been corrected to use shell `pipefail`, after discovering that an earlier `tee` pipeline could show a green GitHub job badge even when the Python verifier raised an exception.
+
+The repository contains a multiprocessing correctness fix as well: the crystalline `algebraic_omegas` field is preserved through worker serialization/deserialization, with a regression test.
 
 ## Earlier branches / dead ends
 
@@ -95,6 +103,7 @@ The repository also contains a multiprocessing correctness fix: the crystalline 
 - `verifier/apply_algebraic_frequency.py` — fail-closed extension of the pinned upstream verifier for exact algebraic crystalline frequencies and multiprocessing transport.
 - `verifier/test_crystal_design.py` — exact candidate/regression tests.
 - `verifier/FAST_GATE_RESULT.md` — successful rigorous fast-gate transcript.
+- `verifier/GRID250_RESULT.md` — exact first global interval failure cell, artifact IDs, and diagnostics.
 - `docs/CHECKPOINT_2026-08-23.md` — current complete research checkpoint and resume procedure.
 - `docs/ROADMAP.md` — certification path and stop/go criteria.
 - `src/crystalline_zeta/geometry.py` — balanced words, defect cells, continued fractions.
