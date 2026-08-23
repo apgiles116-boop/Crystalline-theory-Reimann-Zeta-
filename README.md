@@ -1,64 +1,111 @@
 # Crystalline Theory / Riemann Zeta Experiments
 
-Experimental research repository for testing whether crystalline, quasicrystalline, and defect-lattice structure can improve the finite gap inequalities used in current lower-bound candidates for simple zeros of the Riemann zeta function on the critical line.
+Experimental research repository testing whether crystalline, quasicrystalline, and defect-lattice structure can improve finite-gap inequalities used in lower-bound candidates for simple zeros of the Riemann zeta function on the critical line.
 
-## Status
+## Current status
 
-This is an exploratory numerical project, not a proof of the Riemann Hypothesis and not yet a certified improvement to the published/public candidate bounds.
+This is **not a proof of the Riemann Hypothesis** and the current result is **not yet a certified new lower bound**.
 
-Current reference checkpoint:
+Public reproducible reference checkpoint:
 
-- upstream reproducibly certified public candidate: **0.6733127422722459...** (67.3312742272%) in `trmdy/zeta-simple-zeros-673137`;
-- our earlier unconstrained 21-point crystalline/quasicrystalline search produced a numerical candidate near **0.6733396564** (67.33396564%), but it is **not certified**;
-- the current objective is to determine whether that numerical gain corresponds to a real finite-gap certificate or is only a floating-point/search artifact.
+- `trmdy/zeta-simple-zeros-673137`: approximately **0.6733127422722459...** (67.3312742272%).
 
-## First reproduced checkpoints
+Current leading candidate:
 
-The repository now independently reproduces, in ordinary floating-point arithmetic, two upstream numerical objects before attempting any new optimization:
+- crystalline-spectrum seven-point / six-gap certificate;
+- exact frozen parameters in `verifier/crystal_design.py`;
+- rigorous non-global Arb gate: **PASSED**;
+- conditional refined bound: **0.6733365118717639448847830598448671...**;
+- conservative rational floor: **0.6733364**;
+- sole remaining mathematical gate: prove
 
-1. **Nine-point obstruction.** The public q=8 objective evaluated at its reported floating minimizer is `0.00610273048185719...`, agreeing with the upstream value `0.006102730481857188` to binary64 accuracy. The certified target is `15211/2500000 = 0.0060844`.
-2. **Balanced 673/1000 crystal.** The exact lower mechanical word of slope `327/673`, converted to gaps `1 + bit`, has 673 gaps of total length 1000 (346 one-gaps and 327 two-gaps). Periodizing that configuration and evaluating the public squared kernel gives pair energy approximately **0.00352350665949**, below the upstream stated ceiling `0.003523506664`.
+  `F(g1,...,g6) >= 299/50000`
 
-The second check is especially important: the Sturmian/Christoffel geometry is not merely a visual analogy. It is the explicit pure-pair-energy obstruction already sitting at the known method frontier.
+  for every nonnegative six-gap vector.
 
-## Working geometric hypothesis
+The pressure term alone covers `sum(g_i) >= 11.8404`, so the remaining global proof is a compact six-dimensional interval problem. A staged fail-closed interval campaign is in progress.
 
-The exact frontier configuration is
+See `docs/CHECKPOINT_2026-08-23.md` for the complete handoff state, exact CI run IDs, numerical minimizer, Hessian data, interval strategy, and resume procedure.
 
-`g_i = 1 + floor((i+1)327/673) - floor(i*327/673)`.
+## Frozen crystalline spectrum
 
-It is a balanced Christoffel/Sturmian period with 673 points over length 1000. The earlier defect-lattice decomposition remains an exploratory coarse-graining of this exact word:
+Let
 
-- continued fraction `673/1000 = [0; 1, 2, 17, 4, 1, 3]`;
-- a 19-cell coarse pattern with fifteen 35-cells and four 37-cells;
-- the four 37-cells have cyclic separations `5, 5, 5, 4` up to rotation;
-- this suggests a hierarchy dimer -> phase slip -> Sturmian/Christoffel superstructure.
+`alpha = 8796791/1000000 = 8.796791`.
 
-The decisive question is whether this organization can be exploited by a finite certificate richer than pure pair energy, not merely whether it minimizes a pair-energy functional.
+The candidate frequencies are
 
-## Research program
+`sqrt(2), alpha, alpha*sqrt(3), 2*alpha, alpha*sqrt(7), 3*alpha, 2*alpha*sqrt(3)`.
 
-1. Reproduce the reference finite-gap objective and known certified candidate. **Done for the numerical objective.**
-2. Reproduce the exact 673/1000 balanced obstruction and its pair energy. **Done numerically.**
-3. Recover/reconstruct the earlier 21-point crystalline candidate and evaluate it against the exact public objective family.
-4. Search 21-point and larger blocks using balanced words plus controlled phason/phase-slip defects.
-5. Compare crystalline candidates with random/noncrystalline controls at identical gap counts and span.
-6. Inspect Hessian soft modes, Toeplitz/Fourier spectra, and shell-wise second differences of the kernel.
-7. Rationalize any surviving improvement and run a fail-closed interval certificate.
+The shell radicands `(1, 3, 4, 7, 9, 12)` are treated exactly through Arb algebraic square roots. Pair weights are exact rationals, reflection symmetric, and every span-capacity sum is exactly 2.
 
-## Layout
+## Rigorous fast gate
 
-- `src/crystalline_zeta/geometry.py` — balanced words, defect cells, continued fractions.
-- `src/crystalline_zeta/finite_gap.py` — floating reproduction of the public q=8 finite-gap objective.
-- `src/crystalline_zeta/spectral.py` — generic Gram/spectral diagnostics.
-- `experiments/reproduce_crystalline_obstruction.py` — reproduces both upstream numerical checkpoints.
-- `experiments/probe_673_1000.py` — defect-lattice geometry probe.
+GitHub Actions run `32621696800`, job `97150682500`, passed the full upstream regression set plus crystalline-specific tests: **23 tests passed**.
+
+The Arb checks rigorously established, conditional only on the global six-gap inequality:
+
+- exact crystalline frequencies;
+- span capacities and reflection symmetry;
+- window positivity;
+- window monotonicity;
+- certified `H` lower bound;
+- final deduction arithmetic.
+
+Full enclosures are recorded in `verifier/FAST_GATE_RESULT.md`.
+
+## Numerical global evidence
+
+Extensive adversarial floating searches found a best known minimum
+
+`F_min ~= 0.005989552075279514`,
+
+above the certified target `0.00598` by approximately `9.55e-6`.
+
+Representative minimizing gaps:
+
+`(1.039637978309537, 1.983372509848868, 1.044559829360473, 2.927502540173843, 1.043442852256447, 1.029969455148929)`.
+
+The numerical Hessian there is positive definite, with eigenvalues approximately
+
+`(0.1809517, 0.26883482, 0.54431061, 0.61601053, 0.9962556, 1.49782885)`.
+
+This is evidence only; the outward-rounded global interval proof remains load-bearing.
+
+## Interval campaign
+
+The verifier uses pressure pruning, rigorous lower tables for the pair kernel, and an Arb-validated convex-tangent/Hessian pruner. It is fail-closed: unresolved terminal cells cause failure rather than false certification.
+
+Planned resolution ladder:
+
+`250 -> 500 -> 1000 -> 2000 -> 4000`.
+
+The repository also contains a multiprocessing correctness fix: the crystalline `algebraic_omegas` field is now preserved through worker serialization/deserialization, with a regression test.
+
+## Earlier branches / dead ends
+
+- The earlier direct-defect 21-point floating candidate near **0.6733396564** did **not** survive rigorous certification; its certified floor was only about **0.673269**, below the public checkpoint.
+- A q=20 uniform-weight candidate was **falsified** by an adversarial repeating `112112...` motif; see `experiments/q20_uniform_probe.py`.
+- The exact balanced 673/1000 Sturmian/Christoffel obstruction was independently reproduced with periodic pair energy approximately **0.00352350665949**, confirming that crystalline geometry is genuinely present at the known pure-pair-energy frontier.
+
+## Repository layout
+
+- `verifier/crystal_design.py` — exact frozen crystalline q=6 candidate.
+- `verifier/crystal_verify.py` — rigorous fast and global interval drivers.
+- `verifier/apply_algebraic_frequency.py` — fail-closed extension of the pinned upstream verifier for exact algebraic crystalline frequencies and multiprocessing transport.
+- `verifier/test_crystal_design.py` — exact candidate/regression tests.
+- `verifier/FAST_GATE_RESULT.md` — successful rigorous fast-gate transcript.
+- `docs/CHECKPOINT_2026-08-23.md` — current complete research checkpoint and resume procedure.
 - `docs/ROADMAP.md` — certification path and stop/go criteria.
+- `src/crystalline_zeta/geometry.py` — balanced words, defect cells, continued fractions.
+- `src/crystalline_zeta/finite_gap.py` — floating reproduction of the public finite-gap objective.
+- `src/crystalline_zeta/spectral.py` — spectral diagnostics.
+- `experiments/reproduce_crystalline_obstruction.py` — reference and 673/1000 reproductions.
 
 ## Scientific standard
 
-A better floating-point score is only a discovery signal. A claimed mathematical improvement requires a finite certificate with outward-rounded interval arithmetic, explicit asymptotic bookkeeping, and independent replay.
+A better floating-point score is only a discovery signal. A mathematical improvement requires an explicit finite certificate with outward-rounded interval arithmetic, complete asymptotic bookkeeping, and independent replay. Until the six-gap global verifier succeeds, the `0.673336511871...` value is a **candidate conditional bound** only.
 
 ## Upstream reference
 
-This work builds on the public MIT-licensed finite-certificate line represented by `trmdy/zeta-simple-zeros-673137` and its cited predecessors. Constants or formulas transcribed from upstream are identified in source comments and attribution will be preserved as the project grows.
+This work builds on the public MIT-licensed finite-certificate line represented by `trmdy/zeta-simple-zeros-673137` and its cited predecessors. Upstream formulas and code are attributed where used.
