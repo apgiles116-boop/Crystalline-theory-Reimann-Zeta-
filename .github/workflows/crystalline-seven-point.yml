@@ -55,6 +55,40 @@ jobs:
           cd upstream
           python crystal_verify.py fast
 
+  targeted-grid500:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install candidate and focused-box verifier extension
+        run: |
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/targeted_refine.py upstream/targeted_refine.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Run rigorous 64-box grid-500 refinement
+        run: |
+          set -o pipefail
+          cd upstream
+          python targeted_refine.py --grid 500 2>&1 | tee targeted-grid500.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: targeted-grid500
+          path: upstream/targeted-grid500.txt
+
   interval:
     if: github.event_name == 'workflow_dispatch' && inputs.run_interval
     needs: fast
