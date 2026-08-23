@@ -55,6 +55,40 @@ jobs:
           cd upstream
           python crystal_verify.py fast
 
+  coarse-interval:
+    if: github.event_name == 'pull_request'
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout crystalline research repo
+        uses: actions/checkout@v4
+      - name: Checkout upstream verifier
+        uses: actions/checkout@v4
+        with:
+          repository: trmdy/zeta-simple-zeros-673137
+          path: upstream
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install candidate into upstream verifier
+        run: |
+          python verifier/apply_algebraic_frequency.py
+          cp verifier/crystal_design.py upstream/src/zeta_ext/crystal_design.py
+          cp verifier/crystal_verify.py upstream/crystal_verify.py
+      - name: Install pinned verifier dependencies
+        run: python -m pip install -e upstream
+      - name: Run fail-closed grid-250 interval probe
+        run: |
+          set -o pipefail
+          cd upstream
+          python crystal_verify.py main --grid 250 --workers 8 2>&1 | tee crystalline-seven-grid250.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: crystalline-seven-grid250
+          path: upstream/crystalline-seven-grid250.txt
+
   interval:
     if: github.event_name == 'workflow_dispatch' && inputs.run_interval
     needs: fast
