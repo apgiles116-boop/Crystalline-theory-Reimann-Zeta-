@@ -16,8 +16,6 @@ The crystalline geometry is therefore not merely visual analogy; it is present i
 
 ## Stage B — exploratory crystalline branches — DONE / TRIAGED
 
-Several candidate families were tested.
-
 ### Direct-defect 21-point branch
 
 A numerical candidate near `0.6733396564` appeared at `p=0.0026`, but rigorous certification only supported a floor near `0.673269`, below the public checkpoint.
@@ -78,19 +76,30 @@ Resolution ladder:
 
 `250 -> 500 -> 1000 -> 2000 -> 4000`.
 
-Stop at the first resolution that rigorously closes every box. A failure at a terminal cell is not automatically a counterexample; inspect the cell and refine.
+### Grid 250 result
 
-Current numerical evidence:
+Grid 250 did **not** close globally. The single-worker verifier stopped at
 
-- best floating minimum `~0.005989552075279514`;
-- target margin `~9.55e-6`;
-- minimizing basin has a positive-definite numerical Hessian.
+```text
+((494,494),(263,263),(499,499),(499,499),(263,263),(494,494))
+```
 
-A grid-250 tangent estimate in the known minimizing cell remained above target, so grid 250 is plausible, though only the exhaustive run can certify it.
+with interval lower bound `0.005841208384501174`.
 
-### Parallel-verifier hardening
+This is an unresolved terminal cell, not a counterexample. Numerical diagnostics inside the same cell remained above target: midpoint `F ~= 0.006011802310648076`, and bounded floating search found approximately `0.005992617682563697`.
 
-The algebraic-frequency extension now also patches upstream multiprocessing serialization so `algebraic_omegas` survives worker transport exactly. A regression test verifies the round-trip.
+Full details: `verifier/GRID250_RESULT.md`.
+
+**Next step:** grid 500 and/or targeted subdivision of the symmetric `2,1,2,2,1,2` cell.
+
+### CI hardening
+
+Two infrastructure issues were found and corrected:
+
+- multi-worker serialization now preserves `algebraic_omegas` exactly, with a regression test;
+- interval commands piped through `tee` now use `set -o pipefail`, so a verifier exception correctly fails the GitHub job.
+
+Pre-fix green interval badges are not proof results unless the raw verifier output itself says verification succeeded.
 
 ## Stage E — hardening after first global success
 
@@ -108,14 +117,14 @@ A possible later stretch target is `0.005984`, projecting to approximately `0.67
 
 ## Stage F — mathematical interpretation
 
-After certification, investigate why the shell family and minimizing gap pattern work. Candidate themes:
+After certification, investigate why the shell family and minimizing gap patterns work. Candidate themes:
 
 - reciprocal-lattice / shell-spectrum interpretation of squared norms `1,3,4,7,9,12`;
 - rearrangement inequalities for kernel shells;
 - Sturmian extremality under fixed density;
 - defect/soliton spacing from continued-fraction approximants;
 - Fourier/Toeplitz bounds for almost-periodic Gram structures;
-- analytical explanation of the observed `~1,2,1,3,1,1` minimizing motif.
+- analytical explanation of the observed minimizing motifs.
 
 A structural theorem would be more valuable than a tiny numerical gain because it could reduce the global search space and support longer finite blocks.
 
@@ -130,4 +139,4 @@ Use the following terms distinctly:
 
 Do not describe the current candidate as a proof of the Riemann Hypothesis or as a certified new record until Stage D succeeds.
 
-See `docs/CHECKPOINT_2026-08-23.md` for the current detailed handoff state and run IDs.
+See `docs/CHECKPOINT_2026-08-23.md` for the detailed handoff state and run IDs.
