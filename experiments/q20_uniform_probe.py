@@ -1,11 +1,15 @@
-"""A clean 21-point (q=20) exploratory finite-gap candidate.
+"""Falsified q=20 uniform-weight crystalline candidate.
 
-This is not a certificate.  It uses the public kernel, uniform span-capacity
-weights a_ij = 2/(q+1-(j-i)), pressure 1/3000, and a dimer/crystal local
-minimizer found by binary64 L-BFGS-B search.
+This file records an instructive negative result. A dimer seed initially gave
+F ~= 0.0115173430872 for q=20 uniform span-capacity weights and pressure
+1/3000, suggesting a projected bound above the current public record.
 
-The point of this file is to freeze a simple, reproducible target for the next
-fail-closed global verification campaign.
+An exhaustive search over all 2^20 binary words g_i in {1,2} found the unique
+binary ground pattern 112112... . Continuous relaxation from that seed drops
+the objective to F ~= 0.0111220298291, which kills the proposed target 0.0115.
+
+Keeping this failed candidate in the repository prevents accidental reuse and
+shows why crystalline adversarial seeds must be tested before certification.
 """
 
 from __future__ import annotations
@@ -18,11 +22,9 @@ from crystalline_zeta.finite_gap import finite_gap_objective
 
 Q = 20
 PRESSURE = Fraction(1, 3000)
-CONSERVATIVE_TARGET = Fraction(23, 2000)  # 0.0115, deliberately below local min
+KILLED_TARGET = Fraction(23, 2000)  # 0.0115
 
-# Binary64 local minimizer from a dimer seed. Reflection gives the equivalent
-# reverse solution. Values are stored only as a discovery checkpoint.
-LOCAL_MINIMIZER = (
+DIMER_LOCAL_MINIMIZER = (
     1.045121091678781,
     1.9757697282288766,
     1.0391550128798599,
@@ -45,9 +47,32 @@ LOCAL_MINIMIZER = (
     1.9940253981635425,
 )
 
+# Continuous L-BFGS-B relaxation of the binary 112112... adversarial seed.
+ADVERSARIAL_112_MINIMIZER = (
+    1.035563,
+    1.031998,
+    1.959052,
+    1.028088,
+    1.027701,
+    1.954169,
+    1.026974,
+    1.026873,
+    1.953137,
+    1.026710,
+    1.026710,
+    1.953137,
+    1.026873,
+    1.026974,
+    1.954169,
+    1.027701,
+    1.028088,
+    1.959052,
+    1.031998,
+    1.035563,
+)
+
 
 def uniform_weights(q: int = Q) -> dict[tuple[int, int], float]:
-    """Capacity-saturating homogeneous weights for every span."""
     return {
         (i, j): 2.0 / (q + 1 - (j - i))
         for i in range(q + 1)
@@ -57,26 +82,25 @@ def uniform_weights(q: int = Q) -> dict[tuple[int, int], float]:
 
 def main() -> None:
     weights = uniform_weights()
-    observed = finite_gap_objective(LOCAL_MINIMIZER, float(PRESSURE), weights)
-    candidate_bound, block_length = optimize_block_length(
-        Q, float(PRESSURE), float(CONSERVATIVE_TARGET), maximum_m=500
+    dimer = finite_gap_objective(DIMER_LOCAL_MINIMIZER, float(PRESSURE), weights)
+    adversarial = finite_gap_objective(ADVERSARIAL_112_MINIMIZER, float(PRESSURE), weights)
+    killed_bound, killed_m = optimize_block_length(
+        Q, float(PRESSURE), float(KILLED_TARGET), maximum_m=500
     )
-    optimistic_bound, optimistic_m = optimize_block_length(
-        Q, float(PRESSURE), observed, maximum_m=500
+    surviving_local_projection, surviving_m = optimize_block_length(
+        Q, float(PRESSURE), adversarial, maximum_m=500
     )
 
-    print("q                              :", Q)
-    print("pressure                       :", float(PRESSURE))
-    print("local observed F               :", f"{observed:.15f}")
-    print("conservative target            :", float(CONSERVATIVE_TARGET))
-    print("local margin over target       :", f"{observed-float(CONSERVATIVE_TARGET):.9g}")
-    print("projected bound at target      :", f"{candidate_bound:.12f}")
-    print("best block length              :", block_length)
-    print("optimistic local-only projection:", f"{optimistic_bound:.12f}")
-    print("optimistic block length        :", optimistic_m)
+    print("q                         :", Q)
+    print("pressure                  :", float(PRESSURE))
+    print("dimer local F             :", f"{dimer:.15f}")
+    print("112 adversarial local F   :", f"{adversarial:.15f}")
+    print("killed target             :", float(KILLED_TARGET))
+    print("target violated?          :", adversarial < float(KILLED_TARGET))
+    print("old projected bound       :", f"{killed_bound:.12f}", "at m=", killed_m)
+    print("projection using 112 F    :", f"{surviving_local_projection:.12f}", "at m=", surviving_m)
     print()
-    print("WARNING: neither projection is certified until the global q=20")
-    print("finite-gap inequality is proved over every nonnegative gap vector.")
+    print("STATUS: FALSIFIED. Do not attempt interval certification of 0.0115.")
 
 
 if __name__ == "__main__":
