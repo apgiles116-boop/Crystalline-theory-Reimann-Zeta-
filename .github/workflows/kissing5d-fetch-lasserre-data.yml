@@ -11,16 +11,21 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve 4TU DOI and inspect metadata
+      - name: Download and inspect released Lasserre code
         shell: bash
         run: |
           set -euxo pipefail
-          DOI='https://doi.org/10.4121/74ce1c25-6fca-4680-8a36-e9c18e7e9594'
-          FINAL=$(curl -Ls -o /tmp/page.html -w '%{url_effective}' "$DOI")
-          echo "FINAL_URL=$FINAL"
-          echo '--- candidate links ---'
-          grep -Eo 'https?://[^"<> ]+' /tmp/page.html | grep -Ei '(download|file|api|figshare|4tu)' | head -100 || true
-          echo '--- identifiers ---'
-          grep -Eio '.{0,120}(articleId|itemId|dataset|files|download).{0,240}' /tmp/page.html | head -100 || true
-          echo '--- page head ---'
-          head -80 /tmp/page.html
+          URL='https://data.4tu.nl/ndownloader/items/74ce1c25-6fca-4680-8a36-e9c18e7e9594/versions/1'
+          curl -L "$URL" -o /tmp/d4data.zip
+          echo "ZIP_SIZE=$(stat -c%s /tmp/d4data.zip)"
+          echo '--- zip listing ---'
+          unzip -l /tmp/d4data.zip | head -250
+          rm -rf /tmp/d4data && mkdir /tmp/d4data
+          unzip -q /tmp/d4data.zip -d /tmp/d4data
+          echo '--- README candidates ---'
+          find /tmp/d4data -type f -iname '*readme*' -print
+          while IFS= read -r f; do echo "===== $f ====="; sed -n '1,240p' "$f"; done < <(find /tmp/d4data -type f -iname '*readme*')
+          echo '--- Julia files ---'
+          find /tmp/d4data -type f -name '*.jl' -print | sort | head -250
+          echo '--- files mentioning las2 / kissing / dimension 6 ---'
+          grep -RIlE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16' /tmp/d4data --include='*.jl' --include='*.txt' --include='*.md' | head -100 || true
