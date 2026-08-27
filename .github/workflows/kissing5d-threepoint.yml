@@ -12,10 +12,14 @@ jobs:
   bound:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        degree: [8, 11, 14]
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.10'
-      - name: Run three-point SDP
-        run: julia kissing5d/run_threepoint.jl
+      - name: Run three-point SDP degree ${{ matrix.degree }}
+        run: julia kissing5d/run_threepoint.jl ${{ matrix.degree }}
