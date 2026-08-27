@@ -1,0 +1,26 @@
+name: kissing5d-fetch-lasserre-data
+
+on:
+  push:
+    branches:
+      - kissing5d-compute
+    paths:
+      - '.github/workflows/kissing5d-fetch-lasserre-data.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve 4TU DOI and inspect metadata
+        shell: bash
+        run: |
+          set -euxo pipefail
+          DOI='https://doi.org/10.4121/74ce1c25-6fca-4680-8a36-e9c18e7e9594'
+          FINAL=$(curl -Ls -o /tmp/page.html -w '%{url_effective}' "$DOI")
+          echo "FINAL_URL=$FINAL"
+          echo '--- candidate links ---'
+          grep -Eo 'https?://[^"<> ]+' /tmp/page.html | grep -Ei '(download|file|api|figshare|4tu)' | head -100 || true
+          echo '--- identifiers ---'
+          grep -Eio '.{0,120}(articleId|itemId|dataset|files|download).{0,240}' /tmp/page.html | head -100 || true
+          echo '--- page head ---'
+          head -80 /tmp/page.html
