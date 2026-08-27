@@ -11,7 +11,7 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and inspect released Lasserre code
+      - name: Inspect released LAS2 implementation
         shell: bash
         run: |
           set -euxo pipefail
@@ -21,14 +21,16 @@ jobs:
           mkdir /tmp/outer /tmp/lasserre
           unzip -q /tmp/outer.zip -d /tmp/outer
           unzip -q /tmp/outer/LasserreSphericalCodes.zip -d /tmp/lasserre
-          echo '--- top tree ---'
-          find /tmp/lasserre -maxdepth 3 -type f -printf '%p\n' | sort | head -350
-          echo '--- README candidates ---'
-          find /tmp/lasserre -type f -iname '*readme*' -print
-          while IFS= read -r f; do echo "===== $f ====="; sed -n '1,300p' "$f"; done < <(find /tmp/lasserre -type f -iname '*readme*')
-          echo '--- Julia files ---'
-          find /tmp/lasserre -type f -name '*.jl' -print | sort | head -350
-          echo '--- target files ---'
-          grep -RIlE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16|cos.?theta' /tmp/lasserre --include='*.jl' --include='*.txt' --include='*.md' | head -150 || true
-          echo '--- target snippets ---'
-          grep -RInE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16' /tmp/lasserre --include='*.jl' --include='*.txt' --include='*.md' | head -220 || true
+          ROOT=/tmp/lasserre/LasserreSphericalCodes
+          echo '===== Project.toml ====='
+          cat "$ROOT/Project.toml"
+          echo '===== proof metadata ====='
+          find "$ROOT" -path '*/proofs/*/metadata.txt' -print -exec sh -c 'echo --- $1; cat "$1"' _ {} \; || true
+          echo '===== las2.jl 1-280 ====='
+          sed -n '1,280p' "$ROOT/src/las2.jl"
+          echo '===== las2.jl 580-740 ====='
+          sed -n '580,740p' "$ROOT/src/las2.jl"
+          echo '===== las2.jl 740-840 ====='
+          sed -n '740,840p' "$ROOT/src/las2.jl"
+          echo '===== obj references ====='
+          grep -nE '\bobj\b|Objective\(|objective' "$ROOT/src/las2.jl" | head -150
