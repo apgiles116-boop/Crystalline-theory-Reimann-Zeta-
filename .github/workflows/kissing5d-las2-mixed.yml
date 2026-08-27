@@ -1,0 +1,51 @@
+name: kissing5d-las2-mixed
+
+on:
+  push:
+    branches:
+      - kissing5d-compute
+    paths:
+      - '.github/workflows/kissing5d-las2-mixed.yml'
+
+jobs:
+  las2:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - d1: 8
+            d2: 10
+            delta: 10
+          - d1: 10
+            d2: 10
+            delta: 10
+          - d1: 10
+            d2: 12
+            delta: 12
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - name: Download released LAS2 package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -L 'https://data.4tu.nl/ndownloader/items/74ce1c25-6fca-4680-8a36-e9c18e7e9594/versions/1' -o /tmp/outer.zip
+          mkdir -p /tmp/outer /tmp/lasserre
+          unzip -q /tmp/outer.zip -d /tmp/outer
+          unzip -q /tmp/outer/LasserreSphericalCodes.zip -d /tmp/lasserre
+      - name: Instantiate package
+        shell: bash
+        run: |
+          ROOT=/tmp/lasserre/LasserreSphericalCodes
+          julia --project="$ROOT" -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+      - name: Run mixed-degree 5D LAS2
+        shell: bash
+        run: |
+          ROOT=/tmp/lasserre/LasserreSphericalCodes
+          D1=${{ matrix.d1 }}
+          D2=${{ matrix.d2 }}
+          DELTA=${{ matrix.delta }}
+          julia --project="$ROOT" -t auto -e "using LasserreSphericalCodes; d1=$D1; d2=$D2; delta=$DELTA; println(\"LAS2_MIXED_BEGIN n=5 d1=\",d1,\" d2=\",d2,\" delta=\",delta); o,p,ps,ds=las2(5,[-1,1//2],d1;d2=d2,delta=delta,save_solution=false,eps=1e-14); println(\"LAS2_MIXED_BOUND d1=\",d1,\" d2=\",d2,\" delta=\",delta,\" value=\",o); println(\"LAS2_MIXED_END\")"
