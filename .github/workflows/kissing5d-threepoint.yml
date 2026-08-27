@@ -1,0 +1,21 @@
+name: kissing5d-threepoint
+
+on:
+  push:
+    branches:
+      - kissing5d-compute
+    paths:
+      - 'kissing5d/**'
+      - '.github/workflows/kissing5d-threepoint.yml'
+
+jobs:
+  bound:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - name: Run three-point SDP
+        run: julia kissing5d/run_threepoint.jl
