@@ -26,57 +26,74 @@ jobs:
           x=np.loadtxt('/tmp/pack.5.41.txt').reshape(-1,5)
           x=x/np.linalg.norm(x,axis=1,keepdims=True)
           G=x@x.T
-          vals=G[np.triu_indices(len(x),1)]
+          iu=np.triu_indices(len(x),1)
+          vals=G[iu]
           imax=np.argmax(vals)
-          ij=list(zip(*np.triu_indices(len(x),1)))[imax]
+          ij=(int(iu[0][imax]),int(iu[1][imax]))
           m=float(vals[imax])
           angle=float(np.degrees(np.arccos(np.clip(m,-1,1))))
           print('N=',len(x),'dimension=',x.shape[1])
-          print('norm_error_max=',np.max(np.abs(np.linalg.norm(x,axis=1)-1)))
           print('max_inner_product=',repr(m))
           print('min_angle_deg=',repr(angle),'max_pair=',ij)
           print('centroid_norm=',np.linalg.norm(x.sum(axis=0)))
           ev=np.linalg.eigvalsh(G)
-          print('Gram_nonzero_eigenvalues=',ev[-5:])
+          print('Gram_nonzero_eigenvalues=',ev[-5:].tolist())
           print('Gram_small_eigenvalue_maxabs=',np.max(np.abs(ev[:-5])))
-          # sorted top pair values / gaps
           s=np.sort(vals)[::-1]
-          print('top_50_pair_inner_products=',s[:50].tolist())
-          print('top_gaps=',(s[:30]-s[1:31]).tolist())
+          print('top_60_pair_inner_products=',s[:60].tolist())
+          # multiplicities of rounded pair inner products near the top
+          for dec in [6,7,8,9]:
+              c=Counter(np.round(vals,dec))
+              top=sorted(c.items(),reverse=True)[:20]
+              print(f'PAIR_VALUE_MULTIPLICITIES round={dec}:',top)
           # contact graphs under tolerances below maximum
-          for tol in [1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,5e-3,1e-2]:
+          graphs={}
+          for tol in [1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,5e-3,1e-2,2e-2,3e-2]:
               A=(G >= m-tol) & (~np.eye(len(x),dtype=bool))
               H=nx.from_numpy_array(A)
+              graphs[tol]=H
               deg=[d for _,d in H.degree()]
-              print(f'CONTACT tol={tol:g} edges={H.number_of_edges()} comps={nx.number_connected_components(H)} degree_counts={dict(sorted(Counter(deg).items()))} triangles={sum(nx.triangles(H).values())//3}')
-          # use 1e-5 graph for spectral/symmetry diagnostics
-          tol=1e-5
-          A=(G >= m-tol) & (~np.eye(len(x),dtype=bool))
-          H=nx.from_numpy_array(A)
-          aspec=np.linalg.eigvalsh(nx.to_numpy_array(H))
-          lspec=np.linalg.eigvalsh(nx.laplacian_matrix(H).toarray())
-          print('contact_1e-5_edges=',sorted(H.edges()))
-          print('contact_1e-5_degrees=',[d for _,d in H.degree()])
-          print('contact_1e-5_adj_spectrum=',aspec.tolist())
-          print('contact_1e-5_laplacian_spectrum=',lspec.tolist())
-          # approximate vertex signatures from sorted inner products, grouped to 1e-5
-          sigs=[]
-          for i in range(len(x)):
-              row=np.delete(G[i],i)
-              sig=tuple(np.round(np.sort(row),5))
-              sigs.append(sig)
-          classes={}
-          for i,sig in enumerate(sigs): classes.setdefault(sig,[]).append(i)
-          print('vertex_gram_signature_classes=',list(classes.values()))
-          # automorphisms of contact graph, cap enumeration
-          GM=nx.algorithms.isomorphism.GraphMatcher(H,H)
-          count=0
-          samples=[]
+              comps=sorted([sorted(c) for c in nx.connected_components(H)],key=len,reverse=True)
+              print(f'CONTACT tol={tol:g} edges={H.number_of_edges()} compsizes={[len(c) for c in comps]} degree_counts={dict(sorted(Counter(deg).items()))} triangles={sum(nx.triangles(H).values())//3}')
+          H=graphs[1e-5]
+          deg=np.array([d for _,d in H.degree()])
+          isolated=np.where(deg==0)[0].tolist()
+          core=np.where(deg>0)[0].tolist()
+          print('isolated_indices=',isolated)
+          print('core_indices=',core)
+          print('core_size=',len(core),'isolated_size=',len(isolated))
+          # slack diagnostics for isolated points
+          for i in isolated:
+              maxcore=max(G[i,j] for j in core)
+              maxiso=max([G[i,j] for j in isolated if j!=i],default=-2)
+              print(f'ISOLATED i={i} max_to_core={maxcore:.15f} angle_to_core={np.degrees(np.arccos(maxcore)):.9f} max_to_isolated={maxiso:.15f}')
+          # contact graph spectral diagnostics, no scipy dependency
+          A=nx.to_numpy_array(H)
+          L=np.diag(A.sum(axis=1))-A
+          print('contact_adj_spectrum=',np.linalg.eigvalsh(A).tolist())
+          print('contact_laplacian_spectrum=',np.linalg.eigvalsh(L).tolist())
+          # core-only graph and automorphisms
+          HC=H.subgraph(core).copy()
+          print('core_edges=',HC.number_of_edges(),'core_degree_counts=',dict(sorted(Counter(dict(HC.degree()).values()).items())))
+          GM=nx.algorithms.isomorphism.GraphMatcher(HC,HC)
+          count=0; samples=[]
           for mp in GM.isomorphisms_iter():
               count+=1
-              if len(samples)<5: samples.append([mp[i] for i in range(len(x))])
+              if len(samples)<12: samples.append([mp[i] for i in core])
               if count>=10000: break
-          print('contact_automorphism_count_capped=',count)
-          print('contact_automorphism_samples=',samples)
+          print('core_automorphism_count_capped=',count)
+          print('core_automorphism_samples=',samples)
+          # approximate full Gram row signatures, several roundings
+          for dec in [5,6,7,8]:
+              classes={}
+              for i in range(len(x)):
+                  row=np.delete(G[i],i)
+                  sig=tuple(np.round(np.sort(row),dec))
+                  classes.setdefault(sig,[]).append(i)
+              print(f'GRAM_SIGNATURE_CLASSES round={dec}:',sorted(classes.values(),key=lambda z:(-len(z),z)))
+          # Core/isolated block ranges
+          print('core_pair_max=',max(G[i,j] for ai,i in enumerate(core) for j in core[ai+1:]))
+          print('isolated_pair_max=',max(G[i,j] for ai,i in enumerate(isolated) for j in isolated[ai+1:]))
+          print('cross_pair_max=',max(G[i,j] for i in isolated for j in core))
           PY
           python /tmp/analyze.py
