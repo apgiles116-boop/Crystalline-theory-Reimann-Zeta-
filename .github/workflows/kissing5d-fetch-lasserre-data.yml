@@ -16,16 +16,19 @@ jobs:
         run: |
           set -euxo pipefail
           URL='https://data.4tu.nl/ndownloader/items/74ce1c25-6fca-4680-8a36-e9c18e7e9594/versions/1'
-          curl -L "$URL" -o /tmp/d4data.zip
-          echo "ZIP_SIZE=$(stat -c%s /tmp/d4data.zip)"
-          echo '--- zip listing ---'
-          unzip -l /tmp/d4data.zip | head -250
-          rm -rf /tmp/d4data && mkdir /tmp/d4data
-          unzip -q /tmp/d4data.zip -d /tmp/d4data
+          curl -L "$URL" -o /tmp/outer.zip
+          rm -rf /tmp/outer /tmp/lasserre
+          mkdir /tmp/outer /tmp/lasserre
+          unzip -q /tmp/outer.zip -d /tmp/outer
+          unzip -q /tmp/outer/LasserreSphericalCodes.zip -d /tmp/lasserre
+          echo '--- top tree ---'
+          find /tmp/lasserre -maxdepth 3 -type f -printf '%p\n' | sort | head -350
           echo '--- README candidates ---'
-          find /tmp/d4data -type f -iname '*readme*' -print
-          while IFS= read -r f; do echo "===== $f ====="; sed -n '1,240p' "$f"; done < <(find /tmp/d4data -type f -iname '*readme*')
+          find /tmp/lasserre -type f -iname '*readme*' -print
+          while IFS= read -r f; do echo "===== $f ====="; sed -n '1,300p' "$f"; done < <(find /tmp/lasserre -type f -iname '*readme*')
           echo '--- Julia files ---'
-          find /tmp/d4data -type f -name '*.jl' -print | sort | head -250
-          echo '--- files mentioning las2 / kissing / dimension 6 ---'
-          grep -RIlE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16' /tmp/d4data --include='*.jl' --include='*.txt' --include='*.md' | head -100 || true
+          find /tmp/lasserre -type f -name '*.jl' -print | sort | head -350
+          echo '--- target files ---'
+          grep -RIlE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16|cos.?theta' /tmp/lasserre --include='*.jl' --include='*.txt' --include='*.md' | head -150 || true
+          echo '--- target snippets ---'
+          grep -RInE 'las2|kissing|dimension.?6|d1.?=.*14|d2.?=.*16' /tmp/lasserre --include='*.jl' --include='*.txt' --include='*.md' | head -220 || true
