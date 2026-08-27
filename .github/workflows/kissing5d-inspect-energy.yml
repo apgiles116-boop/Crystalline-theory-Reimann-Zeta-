@@ -1,0 +1,26 @@
+name: kissing5d-inspect-energy
+
+on:
+  push:
+    branches: [kissing5d-compute]
+    paths: ['.github/workflows/kissing5d-inspect-energy.yml']
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect released energy implementation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -L 'https://data.4tu.nl/ndownloader/items/74ce1c25-6fca-4680-8a36-e9c18e7e9594/versions/1' -o /tmp/outer.zip
+          mkdir -p /tmp/outer /tmp/lasserre
+          unzip -q /tmp/outer.zip -d /tmp/outer
+          unzip -q /tmp/outer/LasserreSphericalCodes.zip -d /tmp/lasserre
+          ROOT=/tmp/lasserre/LasserreSphericalCodes
+          echo '=== FILES ==='
+          find "$ROOT" -type f | grep -Ei 'energy|potential|riesz|harmonic' || true
+          echo '=== SYMBOLS ==='
+          grep -RInE 'energy|Energy|potential|cardinality|binomial\(N|Npoints' "$ROOT/src" "$ROOT/examples" 2>/dev/null | head -500 || true
+          echo '=== ALL SRC ==='
+          find "$ROOT/src" -maxdepth 2 -type f -print | sort
