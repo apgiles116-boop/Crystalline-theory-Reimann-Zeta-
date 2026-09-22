@@ -416,3 +416,220 @@ s(t)=\frac{t+\sqrt{3t(5-8t)}}{10}.
 \]
 
 Only after that proof should the argument spend effort on the remaining \(0.01023215114\ldots\) global deficit.
+
+
+## 13. Exact one-saturation HHL theorem (2026-09-22)
+
+Take the HHL midpoint pattern
+\[
+a_1=a_2=\frac14,\qquad a_3=t,\qquad 0<t\le\frac5{504}.
+\]
+
+### PROVED under the single hypothesis that one safe correlation saturates
+
+Assume, after line orientation, that
+\[
+z_1\cdot z_2=\frac12.
+\]
+By the two-sided saturation lemma,
+\[
+m_1\cdot m_2=m_1\cdot z_2=z_1\cdot m_2=0.
+\]
+
+If the remaining two projective correlations have opposite signs, PSD of the
+three-vector \(z\)-Gram matrix gives
+\[
+(z_1\cdot z_3)^2+(z_2\cdot z_3)^2
+\le \frac5{12}(1-t),
+\]
+so this sign branch is strictly below the HHL candidate and cannot be extremal.
+
+Hence orient \(z_3\) so that
+\[
+r_i=z_i\cdot z_3=\frac12-d_i\ge0,\qquad i=1,2,
+\]
+and put \(D=d_1+d_2\).
+
+For pair \((i,3)\), define
+\[
+u_i=m_i\cdot m_3,\quad
+p_i=m_i\cdot z_3,\quad
+q_i=z_i\cdot m_3.
+\]
+The four two-sided endpoint inequalities imply exactly
+\[
+|u_i|\le d_i,
+\qquad
+|p_i+q_i|\le d_i-u_i,
+\qquad
+|p_i-q_i|\le d_i+u_i.
+\]
+
+Set
+\[
+A_i=p_i+q_i,\qquad B_i=p_i-q_i.
+\]
+For fixed \(u_1,u_2\), the allowed \((A_i,B_i)\) form rectangles.
+
+Let \(G\) be the Gram matrix of
+\[
+(m_1,z_1,m_2,z_2,m_3,z_3)
+\]
+and put
+\[
+\Phi=256\det G.
+\]
+Because the six vectors lie in \(\mathbb R^5\),
+\[
+\det G=0.
+\]
+
+Only the regime \(D<1/16\) needs analysis: if \(D\ge1/16\), the elementary
+loss estimate already exceeds the HHL candidate.
+
+For \(D<1/16\), using
+\[
+|u_i|\le D,qquad |A_i|,|B_i|\le2D,
+\]
+direct differentiation gives strict separate concavity of \(\Phi\) in each
+of \(A_1,B_1,A_2,B_2\).  Each second derivative is \(-4\) times a bracket
+bounded below by
+\[
+1-2D-168D^2
+>
+1-\frac18-\frac{168}{256}
+=
+\frac7{32}>0.
+\]
+Therefore the minimum of \(\Phi\) over each endpoint rectangle occurs at a
+corner.
+
+After substituting those corners, the resulting eight sign classes are
+separately concave in \(u_1,u_2\).  Their second derivatives reduce to the
+finite families
+\[
+-24,
+\]
+\[
+8(48d_j^2-8d_j+8t-5),
+\]
+\[
+8(16d_j^2-8d_j+8t+32u_j^2-5),
+\]
+\[
+8(48d_j^2-8d_j+80u_j^2-3),
+\]
+and the two factored forms
+\[
+8(4d_j+4u_j+1)(8d_j+8u_j-3),
+\]
+\[
+8(-8d_j+8u_j+3)(-4d_j+4u_j-1).
+\]
+For \(D<1/16\) and \(t\le5/504<1/100\), every one is strictly negative.
+Hence the determinant minimum occurs at \(u_i=\pm d_i\).
+
+At the resulting finite vertices, exact substitution leaves only two values:
+\[
+\Phi
+=
+Q(D,t)+48d_1d_2,
+\]
+or
+\[
+\Phi
+=
+Q(D,t)
++
+32d_1d_2\bigl(1+t-2D+24d_1d_2\bigr),
+\]
+where
+\[
+Q(D,t)
+=
+-20D^2+4tD-5t^2+3t.
+\]
+Since
+\[
+1+t-2D+24d_1d_2>1-\frac18=\frac78,
+\]
+both cases give the exact determinant lower bound
+\[
+\boxed{256\det G\ge Q(D,t).}
+\]
+
+Rank five gives \(\det G=0\), so
+\[
+Q(D,t)\le0.
+\]
+The two roots of \(Q(D,t)=0\) are
+\[
+\frac{t\pm\sqrt{3t(5-8t)}}{10}.
+\]
+The negative root is inadmissible on the Type-E interval. Therefore
+\[
+\boxed{
+D=d_1+d_2
+\ge
+s(t):=
+\frac{t+\sqrt{3t(5-8t)}}{10}.
+}
+\]
+
+The local squared-correlation loss is
+\[
+L
+=
+d_1(1-d_1)+d_2(1-d_2).
+\]
+For \(D\le1/2\),
+\[
+L\ge D-D^2,
+\]
+and for \(D\ge1/2\), trivially \(L\ge1/4\).  Since
+\(s(t)<1/16\), it follows throughout the Type-E HHL interval that
+\[
+\boxed{
+L\ge s(t)(1-s(t)).
+}
+\]
+
+Equality forces
+\[
+d_1d_2=0,
+\]
+so **a second safe correlation must saturate at equality**.  Thus the
+previously observed two-saturation HHL face is not a numerical accident: it
+is the unique equality pattern once a single saturated safe correlation is
+known.
+
+At the terminal value \(t=5/504\),
+\[
+s=
+\frac1{1008}+\frac{\sqrt{93}}{252},
+\]
+and
+\[
+L
+=
+-\frac{481}{1016064}
++
+\frac{503\sqrt{93}}{127008}
+\approx0.037719130549095.
+\]
+
+### OPEN after this theorem
+
+The HHL local problem has now been reduced to one sharply isolated question:
+
+> prove that a global HHL maximizer must have at least one saturated safe
+> projective correlation \(|z_i\cdot z_j|=1/2\).
+
+Once that first saturation is established, the HHL envelope above is fully
+proved and the equality pattern automatically supplies the second saturation.
+
+The remaining Type-E global deficit after the terminal HHL contribution is
+still approximately
+\[
+0.01023215114.
+\]
