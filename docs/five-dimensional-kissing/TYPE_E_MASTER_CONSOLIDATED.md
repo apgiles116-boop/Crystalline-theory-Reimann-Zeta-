@@ -899,3 +899,358 @@ A>\frac{383}{504},
 which would eliminate Type E.
 
 No such contradiction is claimed yet.
+
+
+---
+
+## 17. 2026-09-25 continuation: sharpened exception energy and 17-line subframe theorem
+
+This section **supersedes the weaker safe-mass/localization constants in §§6 and 11**. Those earlier inequalities remain valid but are no longer the strongest current values.
+
+Let
+
+\[
+A_*=\frac{383}{504},
+\qquad
+D_0=\frac{1780062775}{4032758016}.
+\]
+
+### PROVED / EXACT — improved global exceptional squared-mass cap
+
+For every exceptional pair,
+
+\[
+|g_e|=\frac12+d_e,\qquad
+0<d_e\le\sqrt{a_i a_j}\le\frac14.
+\]
+
+Since
+
+\[
+\sum_e d_e\le D_0,
+\qquad
+\frac14<D_0<\frac12,
+\]
+
+convexity of \(x^2\) gives
+
+\[
+\boxed{
+\sum_e d_e^2
+\le
+\frac1{16}
++
+\left(D_0-\frac14\right)^2.
+}
+\]
+
+Therefore, using at most six exceptional pairings,
+
+\[
+\boxed{
+\sum_{e\in E}g_e^2
+\le
+\frac32+D_0+\frac1{16}
++\left(D_0-\frac14\right)^2
+=
+D_0^2+\frac{D_0}{2}+\frac{13}{8}.
+}
+\]
+
+Numerically,
+
+\[
+\boxed{
+\sum_{e\in E}g_e^2
+\le
+2.040535121285547.
+}
+\]
+
+Combining with the strongest universal \(Q\)-floor,
+
+\[
+S_z\ge
+\frac{8790283}{317520}
+\approx27.6841868228773,
+\]
+
+gives the improved global safe mass
+
+\[
+\boxed{
+S_{\rm safe}\ge25.643651701591754.
+}
+\]
+
+This replaces the previous weaker \(25.54795128168835\) value.
+
+Consequently
+
+\[
+S_{\rm safe}-25
+\ge
+0.643651701591754.
+\]
+
+The lower bound of 103 nonorthogonal safe pairings is unchanged, but its weighted excess above the triangle-free \(25\)-capacity is substantially larger.
+
+### PROVED / EXACT — existence of a 17-index low-midpoint block
+
+Put
+
+\[
+t_0:=\frac{A_*}{4}
+=
+\frac{383}{2016}.
+\]
+
+Since four indices with \(a_i>t_0\) would have total midpoint energy exceeding \(A_*\), there exists a set \(L\) of 17 indices satisfying
+
+\[
+\boxed{
+a_i\le t_0
+\qquad(i\in L).
+}
+\]
+
+Write
+
+\[
+A_L=\sum_{i\in L}a_i,
+\qquad
+B_L=\sum_{i\in L}a_i^2,
+\]
+
+\[
+F_L=\sum_{i\in L} z_i z_i^T,
+\qquad
+V_L=
+\left\|
+F_L-\frac{17-A_L}{5}I
+\right\|_F^2,
+\]
+
+and
+
+\[
+S_L=
+\sum_{\{i,j\}\subset L}(z_i\cdot z_j)^2.
+\]
+
+The rank-five frame identity gives exactly
+
+\[
+\boxed{
+S_L
+=
+\frac{102}{5}
+-\frac{12}{5}A_L
++\frac{A_L^2}{10}
+-\frac12B_L
++\frac12V_L.
+}
+\]
+
+Since \(a_i\le t_0\),
+
+\[
+B_L\le t_0A_L.
+\]
+
+The resulting scalar lower envelope is decreasing on \(0\le A_L\le A_*\), so
+
+\[
+\boxed{
+S_L
+\ge
+\frac{37719859}{2032128}
+\approx18.56175349190602.
+}
+\]
+
+### PROVED / EXACT — second-order stability inside the 17-index block
+
+Define
+
+\[
+R_L:=t_0A_L-B_L
+=
+\sum_{i\in L}a_i(t_0-a_i)\ge0,
+\]
+
+and
+
+\[
+u:=A_*-A_L\ge0.
+\]
+
+Then the preceding identity refines exactly to
+
+\[
+\boxed{
+S_L
+=
+\frac{37719859}{2032128}
++
+\frac{3149}{1344}u
++
+\frac{u^2}{10}
++
+\frac12R_L
++
+\frac12V_L.
+}
+\]
+
+Thus the 17-line projected frame pays a quantitative penalty whenever:
+
+- midpoint energy escapes from the block (\(u>0\));
+- midpoint energies fail to concentrate at the cap \(t_0\) (\(R_L>0\));
+- the projected frame fails to be tight (\(V_L>0\)).
+
+### PROVED / EXACT — exceptional mass inside the 17-index block
+
+For an exceptional pair entirely inside \(L\),
+
+\[
+d_e\le\sqrt{a_i a_j}\le t_0.
+\]
+
+Moreover
+
+\[
+2t_0<D_0<3t_0.
+\]
+
+Hence convexity gives
+
+\[
+\boxed{
+\sum_{e\subset L}d_e^2
+\le
+2t_0^2+(D_0-2t_0)^2.
+}
+\]
+
+Therefore the total exceptional squared-correlation mass inside \(L\) is at most
+
+\[
+\boxed{
+E_L
+\le
+\frac32+D_0
++2t_0^2+(D_0-2t_0)^2
+\approx2.017360699015280.
+}
+\]
+
+Subtracting from the 17-line frame floor yields
+
+\[
+\boxed{
+S_{L,\rm safe}
+\ge
+16.54439279289074.
+}
+\]
+
+This is the strongest current localization of safe projective squared-correlation mass.
+
+### PROVED / EXACT — combinatorial consequences inside \(L\)
+
+Because every safe pair contributes at most \(1/4\),
+
+\[
+\boxed{
+\text{at least 67 safe pairings in }L
+\text{ are nonorthogonal}.
+}
+\]
+
+If \(N_{1/16}\) denotes the number of safe \(L\)-pairs with
+
+\[
+g_{ij}^2>\frac1{16},
+\]
+
+then
+
+\[
+S_{L,\rm safe}
+\le
+\frac{N_{1/16}}4
++
+\frac{136-N_{1/16}}{16},
+\]
+
+so
+
+\[
+\boxed{
+N_{1/16}\ge43.
+}
+\]
+
+Equivalently, at least 43 safe pairs in \(L\) satisfy
+
+\[
+\boxed{
+|z_i\cdot z_j|>\frac14.
+}
+\]
+
+Likewise, at least 20 safe pairs in \(L\) satisfy
+
+\[
+\boxed{
+(z_i\cdot z_j)^2>\frac1{10},
+\qquad
+|z_i\cdot z_j|>\frac1{\sqrt{10}}.
+}
+\]
+
+The graph of the 43 pairs with \(|g|>1/4\) has 17 vertices and 43 edges, so some vertex has degree at least 6 in this strong-correlation graph.
+
+Also,
+
+\[
+\frac{2S_{L,\rm safe}}{17}
+\ge
+1.946399152104793,
+\]
+
+so some index \(i\in L\) has safe incident squared-correlation mass at least
+
+\[
+\boxed{
+\sum_{\substack{j\in L\\ ij\ {\rm safe}}}
+(z_i\cdot z_j)^2
+\ge1.946399152104793.
+}
+\]
+
+### CURRENT DIAGNOSIS
+
+The 17-index low-midpoint sector is substantially more constrained than the earlier \(12.04795\)-mass estimate suggested:
+
+\[
+\boxed{
+S_{L,\rm safe}\ge16.54439279289074.
+}
+\]
+
+However, 67 guaranteed nonorthogonal safe edges are still below the Mantel threshold
+
+\[
+\left\lfloor\frac{17^2}{4}\right\rfloor=72,
+\]
+
+so the subframe theorem alone does **not** yet force a safe triangle inside \(L\).
+
+The next exact target is therefore local: exploit the guaranteed strong star (at least six safe neighbors with \(|g|>1/4\) for some vertex) together with the endpoint diamond and the \(4\times4\) spectral determinant to force either:
+
+1. additional midpoint determinant expenditure beyond the global \(<0.231\) budget; or
+2. a rigid \(D_5\)-type local contact pattern to which the \(Q\)-kernel cycle relations can be applied.
+
+No Type-E elimination is claimed yet.
